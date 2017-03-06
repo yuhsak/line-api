@@ -1,0 +1,42 @@
+{
+  "name": "line-api",
+  "version": "0.0.1",
+  "description": "Simple LINE api for node.js",
+  "main": "entrypoint.js",
+  "scripts": {
+    "build": "gulp build",
+    "watch": "gulp watch",
+    "start": "gulp",
+    "test": "./test.sh",
+    "prepublish": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yuhsak/line-api.git"
+  },
+  "keywords": [
+    "LINE",
+    "API",
+    "bot",
+    "sdk",
+    "notify"
+  ],
+  "author": "Yuhsak Inoue",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Yuhsak/line-api/issues"
+  },
+  "homepage": "https://github.com/Yuhsak/line-api#readme",
+  "devDependencies": {
+    "babel-preset-es2015": "^6.22.0",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^6.1.2",
+    "gulp-plumber": "^1.1.0"
+  },
+  "dependencies": {
+    "qs": "^6.4.0",
+    "request": "^2.80.0",
+    "request-promise": "^4.1.1",
+    "validate-arguments": "0.0.8"
+  }
+}
