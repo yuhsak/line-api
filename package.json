@@ -1,6 +1,6 @@
 {
   "name": "line-api",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Simple LINE api for node.js",
   "main": "entrypoint.js",
   "scripts": {
