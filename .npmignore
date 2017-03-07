@@ -1,4 +1,8 @@
 node_modules/
 src/
+.babelrc
+.npmignore
 gulpfile.babel.js
 test.sh
+test.js
+token.json

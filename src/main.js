@@ -1,7 +1,9 @@
+import 'babel-polyfill';
 import qs from 'qs'
 import request from 'request-promise'
 import validate from 'validate-arguments'
-import config from '../config.json'
+import config from '../config/config.json'
+import stickerShorthands from '../config/sticker.json'
 
 class Notify {
 	
@@ -10,139 +12,109 @@ class Notify {
 			throw new Error('Please initialize with {token} argument.')
 		}
 		this.token = token
-	}
-	
-	get requestHeader() {
-		return { 
-			get: { Authorization: `Bearer ${this.token}` },
-			post: Object.assign({ Authorization: `Bearer ${this.token}` }, { 'Content-Type': 'application/x-www-form-urlencoded' })
+		this.ratelimit = {
+			request: {
+				limit: null,
+				remaining: null
+			},
+			image: {
+				limit: null,
+				remaining: null
+			},
+			reset: null
 		}
 	}
 	
-	get stickerShorthands() {
-		return {
-			'sleep': {
-				packageId: 1,
-				id: 1
-			},
-			'smile': {
-				packageId: 1,
-				id: 2
-			},
-			'surprise': {
-				packageId: 1,
-				id: 3
-			},
-			'admire': {
-				packageId: 1,
-				id: 4
-			},
-			'fun': {
-				packageId: 1,
-				id: 5
-			},
-			'angry': {
-				packageId: 1,
-				id: 6
-			},
-			'you': {
-				packageId: 1,
-				id: 7
-			},
-			'scare': {
-				packageId: 1,
-				id: 8
-			},
-			'cry': {
-				packageId: 1,
-				id: 9
-			},
-			'laugh': {
-				packageId: 1,
-				id: 10
-			},
-			'sing': {
-				packageId: 1,
-				id: 11
-			},
-			'fight': {
-				packageId: 1,
-				id: 13
-			},
-			'good': {
-				packageId: 1,
-				id: 13
-			},
-			'ok': {
-				packageId: 1,
-				id: 13
-			},
-		}
+	req(args) {
+		const validation = validate.named(args, {
+			endpoint: 'string',
+			formData: {
+				isa: 'plainObject',
+				optional: true
+			}
+		})
+		const endpoint = validation.get('endpoint')
+		const formData = validation.get('formData')
+		const method = endpoint == 'status' ? 'get' : 'post'
+		const headers = { Authorization: `Bearer ${this.token}` }
+		if(method == 'post') headers['Content-Type'] = 'application/x-www-form-urlencoded'
+		return request(Object.assign({ method, headers, url: config.ENDPOINT_URL_NOTIFY[endpoint], resolveWithFullResponse: true }, formData ? {formData} : {}))
+			.then(res=>{
+				const header = res.headers
+				const body = res.body
+				this.ratelimit = {
+					request: {
+						limit: parseInt(header['x-ratelimit-limit']),
+						remain: parseInt(header['x-ratelimit-remaining'])
+					},
+					image: {
+						limit: parseInt(header['x-ratelimit-imagelimit']),
+						remain: parseInt(header['x-ratelimit-imageremaining'])
+					},
+					reset: new Date(parseInt(header['x-ratelimit-reset'])*1000)
+				}
+				return JSON.parse(body)
+			})
 	}
 	
 	status() {
-		return request.get({
-			url: config.ENDPOINT_URL_NOTIFY.status,
-			headers: this.requestHeader.get
-		}).then(res=>JSON.parse(res))
+		return this.req({endpoint: 'status'})
 	}
 	
 	revoke() {
-		return request.post({
-			url: config.ENDPOINT_URL_NOTIFY.revoke,
-			headers: this.requestHeader.post,
-		}).then(res=>JSON.parse(res))
+		return this.req({endpoint: 'revoke'})
 	}
 	
 	send(args) {
 		
-		const validation = validate.named(args, {
-			message: 'string',
-			sticker: {
-				isa: {
-					packageId: { isa: 'number', optional: true },
-					id: { isa: 'number', optional: true },
-					shorthand: { isa: 'string', optional: true }
-				},
-				optional: true
-			},
-			image: {
-				isa: {
-					thumbnail: { isa: 'string', optional: true },
-					fullsize: { isa: 'string', optional: true },
-					file: { isa: 'string', optional: true }
-				},
-				optional: true
+		return new Promise((resolve, reject)=>{
+			
+			const validation = validate.named(args, {
+				message: 'string',
+				// sticker: {
+					// isa: 'string',
+					// isa: {
+					// 	packageId: { isa: 'number', optional: true },
+					// 	id: { isa: 'number', optional: true },
+					// },
+					// optional: true
+				// },
+				image: {
+					isa: {
+						thumbnail: { isa: 'string', optional: true },
+						fullsize: { isa: 'string', optional: true },
+						file: { isa: 'string', optional: true }
+					},
+					optional: true
+				}
+			})
+			
+			if(!validation.isValid()) {
+				reject(validation.errorString())
 			}
-		})
-		
-		const message = validation.get('message')
-		const sticker = validation.get('sticker')
-		const image = validation.get('image')
-		
-		const formData = {message}
-		
-		if(sticker) {
-			if(sticker.shorthand) {
-				if(Object.keys(this.stickerShorthands).includes(sticker.shorthand)){
-					formData.stickerPackageId = this.stickerShorthands[sticker.shorthand].packageId
-					formData.stickerId = this.stickerShorthands[sticker.shorthand].id
+			
+			const message = validation.get('message')
+			const sticker = validation.get('sticker')
+			const image = validation.get('image')
+			const formData = {message}
+			
+			if(sticker) {
+				if(typeof sticker == 'string') {
+					if(Object.keys(stickerShorthands).includes(sticker)){
+						formData.stickerPackageId = stickerShorthands[sticker].packageId
+						formData.stickerId = stickerShorthands[sticker].id
+					}
+				}
+				if(typeof sticker == 'object' && sticker.packageId && sticker.id){
+					formData.stickerPackageId = sticker.packageId
+					formData.stickerId = sticker.id
 				}
 			}
-			if(sticker.packageId && sticker.id){
-				formData.stickerPackageId = sticker.packageId
-				formData.stickerId = sticker.id
-			}
-		}
-		
-		// if()
-		
-		return request.post({
-			url: config.ENDPOINT_URL_NOTIFY.send,
-			headers: this.requestHeader.post,
-			formData
+			
+			this.req({endpoint: 'send', formData}).then(res=>resolve(res)).catch(err=>reject(err))
 		})
-		.then(res=>JSON.parse(res))
+		
+		
 	}
 	
 }
@@ -151,4 +123,4 @@ const LineAPI = {
 	Notify
 }
 
-export default  LineAPI
+export default LineAPI
