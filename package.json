@@ -1,6 +1,6 @@
 {
   "name": "line-api",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Simple LINE api for node.js",
   "main": "entrypoint.js",
   "scripts": {
@@ -37,7 +37,7 @@
     "gulp-plumber": "^1.1.0"
   },
   "dependencies": {
-    "qs": "^6.4.0",
+    "fs": "0.0.1-security",
     "request": "^2.80.0",
     "request-promise": "^4.1.1",
     "validate-arguments": "0.0.8"

@@ -1,5 +1,4 @@
-import 'babel-polyfill';
-import qs from 'qs'
+import fs from 'fs'
 import request from 'request-promise'
 import validate from 'validate-arguments'
 import config from '../config/config.json'
@@ -37,7 +36,7 @@ class Notify {
 		const formData = validation.get('formData')
 		const method = endpoint == 'status' ? 'get' : 'post'
 		const headers = { Authorization: `Bearer ${this.token}` }
-		if(method == 'post') headers['Content-Type'] = 'application/x-www-form-urlencoded'
+		if(method == 'post') headers['Content-Type'] = 'multipart/form-data'
 		return request(Object.assign({ method, headers, url: config.ENDPOINT_URL_NOTIFY[endpoint], resolveWithFullResponse: true }, formData ? {formData} : {}))
 			.then(res=>{
 				const header = res.headers
@@ -79,14 +78,14 @@ class Notify {
 					// },
 					// optional: true
 				// },
-				image: {
-					isa: {
-						thumbnail: { isa: 'string', optional: true },
-						fullsize: { isa: 'string', optional: true },
-						file: { isa: 'string', optional: true }
-					},
-					optional: true
-				}
+				// image: {
+				// 	isa: 'string',
+				// 	isa: {
+				// 		thumbnail: { isa: 'string', optional: true },
+				// 		fullsize: { isa: 'string', optional: true }
+				// 	},
+				// 	optional: true
+				// }
 			})
 			
 			if(!validation.isValid()) {
@@ -108,6 +107,16 @@ class Notify {
 				if(typeof sticker == 'object' && sticker.packageId && sticker.id){
 					formData.stickerPackageId = sticker.packageId
 					formData.stickerId = sticker.id
+				}
+			}
+			
+			if(image) {
+				if(typeof image == 'string') {
+					formData.imageFile = fs.createReadStream(image)
+				}
+				if(typeof image == 'object' && image.thumbnail && image.fullsize) {
+					formData.imageThumbnail = image.thumbnail
+					formData.imageFullsize = image.fullsize
 				}
 			}
 			

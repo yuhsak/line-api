@@ -7,8 +7,9 @@ notify.status()
 	.then(res=>{
 		console.log(res)
 		return notify.send({
-			'message': 'Test message',
-			'sticker': 'smile'
+			message: 'Test message',
+			sticker: 'smile',
+			image: 'test.jpg'
 		})
 	})
 	.then(res=>{
