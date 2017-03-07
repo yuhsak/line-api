@@ -4,7 +4,9 @@ Simple LINE api for node.js.
 (Currently only supports Notify API.)
 
 ## Install
-`npm install line-api`
+```sh
+npm install line-api
+```
 
 ## Initialization
 
@@ -63,8 +65,10 @@ For sticker parameter, you can use one of these shorthands below.
 
 Or specify exact stickerPackageId and stickerId suggested at [https://devdocs.line.me/files/sticker_list.pdf](https://devdocs.line.me/files/sticker_list.pdf)
 
-For image parameter, you can just specify with local file path, or remote file url.  
-If you specify with local file path, the file can be both jpeg format and png format.  
+For image parameter, you can just specify with local file path, or remote file url.
+
+If you specify with local file path, the file can be both jpeg format and png format.
+
 If it's a remote url, the format must be a **JPEG** and these parameter _fullsize_ (up to 1024x1024 pixel) and _thumbnail_ (up to 240x240) both like example upon are required.
 
 ### notify.revoke()
@@ -81,7 +85,8 @@ notify.revoke()
 
 ### notify.ratelimit
 
-Check the rate limit of LINE Notify API for given token.  
+Check the rate limit of LINE Notify API for given token.
+
 Note that you must call one of these methods status() and send() at least one time to make this prop ready.
 
 ```js
