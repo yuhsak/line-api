@@ -25,35 +25,40 @@ class Notify {
 	}
 	
 	req(args) {
-		const validation = validate.named(args, {
-			endpoint: 'string',
-			formData: {
-				isa: 'plainObject',
-				optional: true
-			}
-		})
-		const endpoint = validation.get('endpoint')
-		const formData = validation.get('formData')
-		const method = endpoint == 'status' ? 'get' : 'post'
-		const headers = { Authorization: `Bearer ${this.token}` }
-		if(method == 'post') headers['Content-Type'] = 'multipart/form-data'
-		return request(Object.assign({ method, headers, url: config.ENDPOINT_URL_NOTIFY[endpoint], resolveWithFullResponse: true }, formData ? {formData} : {}))
-			.then(res=>{
-				const header = res.headers
-				const body = res.body
-				this.ratelimit = {
-					request: {
-						limit: parseInt(header['x-ratelimit-limit']),
-						remain: parseInt(header['x-ratelimit-remaining'])
-					},
-					image: {
-						limit: parseInt(header['x-ratelimit-imagelimit']),
-						remain: parseInt(header['x-ratelimit-imageremaining'])
-					},
-					reset: new Date(parseInt(header['x-ratelimit-reset'])*1000)
+		return new Promise((resolve, reject)=>{
+			const validation = validate.named(args, {
+				endpoint: 'string',
+				formData: {
+					isa: 'plainObject',
+					optional: true
 				}
-				return JSON.parse(body)
 			})
+			const endpoint = validation.get('endpoint')
+			const formData = validation.get('formData')
+			const method = endpoint == 'status' ? 'get' : 'post'
+			const headers = { Authorization: `Bearer ${this.token}` }
+			if(method == 'post') headers['Content-Type'] = 'multipart/form-data'
+			request(Object.assign({ method, headers, url: config.ENDPOINT_URL_NOTIFY[endpoint], resolveWithFullResponse: true }, formData ? {formData} : {}))
+				.then(res=>{
+					const header = res.headers
+					const body = res.body
+					this.ratelimit = {
+						request: {
+							limit: parseInt(header['x-ratelimit-limit']),
+							remain: parseInt(header['x-ratelimit-remaining'])
+						},
+						image: {
+							limit: parseInt(header['x-ratelimit-imagelimit']),
+							remain: parseInt(header['x-ratelimit-imageremaining'])
+						},
+						reset: new Date(parseInt(header['x-ratelimit-reset'])*1000)
+					}
+					resolve(JSON.parse(body))
+				})
+				.catch(err=>{
+					reject(JSON.parse(err.error))
+				})
+		})
 	}
 	
 	status() {
@@ -66,8 +71,8 @@ class Notify {
 	
 	send(args) {
 		
-		return new Promise((resolve, reject)=>{
-			
+		return Promise.resolve().then(()=>{
+
 			const validation = validate.named(args, {
 				message: 'string',
 				// sticker: {
@@ -89,7 +94,7 @@ class Notify {
 			})
 			
 			if(!validation.isValid()) {
-				reject(validation.errorString())
+				throw new Error(validation.errorString())
 			}
 			
 			const message = validation.get('message')
@@ -100,13 +105,11 @@ class Notify {
 			if(sticker) {
 				if(typeof sticker == 'string') {
 					if(Object.keys(stickerShorthands).includes(sticker)){
-						formData.stickerPackageId = stickerShorthands[sticker].packageId
-						formData.stickerId = stickerShorthands[sticker].id
+						[formData.stickerPackageId, formData.stickerId] = [stickerShorthands[sticker].packageId, stickerShorthands[sticker].id]
 					}
 				}
 				if(typeof sticker == 'object' && sticker.packageId && sticker.id){
-					formData.stickerPackageId = sticker.packageId
-					formData.stickerId = sticker.id
+					[formData.stickerPackageId, formData.stickerId] = [sticker.packageId, sticker.id]
 				}
 			}
 			
@@ -114,15 +117,14 @@ class Notify {
 				if(typeof image == 'string') {
 					formData.imageFile = fs.createReadStream(image)
 				}
-				if(typeof image == 'object' && image.thumbnail && image.fullsize) {
-					formData.imageThumbnail = image.thumbnail
-					formData.imageFullsize = image.fullsize
+				if(typeof image == 'object' && image.fullsize && image.thumbnail) {
+					[formData.imageFullsize, formData.imageThumbnail] = [image.fullsize, image.thumbnail]
 				}
 			}
 			
-			this.req({endpoint: 'send', formData}).then(res=>resolve(res)).catch(err=>reject(err))
-		})
+			return this.req({endpoint: 'send', formData})
 		
+		})
 		
 	}
 	

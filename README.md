@@ -31,10 +31,20 @@ notify.status().then(console.log)
 ### notify.send()
 
 Send message.  
-Attaching image is currently _not supported_.  
 Returns a **Promise object**.
 
-For sticker param, you can use one of shorthands below.  
+```js
+notify.send({
+	message: 'Test message',
+	sticker: 'smile' // shorthand
+	// sticker : { packageId: 1, id: 2 } // exact ids
+	image: 'test.jpg' // local file
+	// image: { fullsize: 'http://example.com/1024x1024.jpg', thumbnail: 'http://example.com/240x240.jpg' } // remote url
+}).then(console.log)
+// { status: 200, message: 'ok' }
+```
+
+For sticker parameter, you can use one of these shorthands below.  
 
 - sleep
 - smile
@@ -51,16 +61,11 @@ For sticker param, you can use one of shorthands below.
 - good
 - ok
 
-Or specify exact stickerPackageId and stickerId suggested in [https://devdocs.line.me/files/sticker_list.pdf](https://devdocs.line.me/files/sticker_list.pdf).
+Or specify exact stickerPackageId and stickerId suggested at [https://devdocs.line.me/files/sticker_list.pdf](https://devdocs.line.me/files/sticker_list.pdf)
 
-```js
-notify.send({
-	message: 'Test message',
-	sticker: 'smile' // shorthand
-	// sticker : { packageId: 1, id: 2 } // exact ids
-}).then(console.log)
-// { status: 200, message: 'ok' }
-```
+For image parameter, you can just specify with local file path, or remote file url.  
+If you specify with local file path, the file can be both jpeg format and png format.  
+If it's a remote url, the format must be a **JPEG** and these parameter _fullsize_ (up to 1024x1024 pixel) and _thumbnail_ (up to 240x240) both like example upon are required.
 
 ### notify.revoke()
 
