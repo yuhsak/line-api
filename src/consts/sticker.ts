@@ -1,4 +1,4 @@
-export const StickerShorthand = {
+export const STICKER = {
   "sleep": {
     "packageId": 1,
     "id": 1

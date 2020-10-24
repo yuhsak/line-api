@@ -2,8 +2,9 @@ import fs from 'fs'
 import fetch from 'isomorphic-unfetch'
 import FormData from 'form-data'
 
-import {Config} from './consts/config'
-import {StickerShorthand} from './consts/sticker'
+import {ENDPOINT, STICKER} from './consts'
+
+export {ENDPOINT, STICKER}
 
 export type NotifyOption = {
   token: string
@@ -41,7 +42,7 @@ export type SendResponse = {
 export type SendOption = {
   message: string,
   image?: string | {fullsize: string, thumbnail: string},
-  sticker?: keyof typeof StickerShorthand | {packageId: number, id: number}
+  sticker?: keyof typeof STICKER | {packageId: number, id: number}
   notificationDisabled?: boolean
 }
 
@@ -67,7 +68,7 @@ export class Notify {
   }
 
   async req(path: string, param?: RequestInit) {
-    const url = Config.ENDPOINT.notify + path
+    const url = ENDPOINT.notify + path
     const headers = {Authorization: `Bearer ${this.token}`, ...param?.headers}
     return fetch(url, {...param, headers})
       .then(r => {
@@ -131,7 +132,7 @@ export class Notify {
     }
 
     if (sticker) {
-      const {packageId, id} = typeof sticker === 'string' ? (StickerShorthand[sticker] || {}) : sticker
+      const {packageId, id} = typeof sticker === 'string' ? (STICKER[sticker] || {}) : sticker
       if (packageId && id) {
         formData.append('stickerPackageId', packageId)
         formData.append('stickerId', id)
