@@ -1,3 +1,6 @@
 export const ENDPOINT = {
-  "notify": "https://notify-api.line.me/api"
+  "notify": {
+    "api": "https://notify-api.line.me/api",
+    "oauth": "https://notify-bot.line.me/oauth"
+  }
 }

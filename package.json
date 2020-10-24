@@ -1,6 +1,6 @@
 {
   "name": "line-api",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Simple LINE api client for Node.js written in TypeScript",
   "author": "Yuhsak Inoue",
   "keywords": [
