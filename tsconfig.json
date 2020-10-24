@@ -1,0 +1,28 @@
+{
+  "include": [
+    "src",
+  ],
+  "compilerOptions": {
+    "incremental": true,
+    "target": "es5",
+    "module": "commonjs",
+    "lib": [
+      "esnext",
+      "dom"
+    ],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./lib/common",
+    "rootDir": "./src",
+    "tsBuildInfoFile": "./lib/common/tsconfig.tsbuildinfo",
+    "downlevelIteration": true,
+    "isolatedModules": true,
+    "strict": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
+  }
+}

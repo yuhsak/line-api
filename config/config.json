@@ -1,7 +1,0 @@
-{
-	"ENDPOINT_URL_NOTIFY": {
-		"send": "https://notify-api.line.me/api/notify",
-		"status": "https://notify-api.line.me/api/status",
-		"revoke": "https://notify-api.line.me/api/revoke"
-	}
-}
