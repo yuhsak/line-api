@@ -1,9 +1,11 @@
 # line-api
-Simple LINE api for node.js.
 
-(Currently only supports Notify API.)
+Simple LINE api for node.js written in TypeScript.
+
+(Currently only supports LINE Notify API.)
 
 ## Install
+
 ```sh
 npm install line-api
 ```
@@ -11,9 +13,9 @@ npm install line-api
 ## Initialization
 
 ```js
-import LineAPI from 'line-api'
+import {Notify} from 'line-api'
 
-const notify = new LineAPI.Notify({
+const notify = new Notify({
 	token: <YOUR_TOKEN_HERE>
 })
 ```
@@ -22,7 +24,7 @@ const notify = new LineAPI.Notify({
 
 ### notify.status()
 
-Check the status of given token.  
+Check the status of given token.
 Returns a **Promise object**.
 
 ```js
@@ -32,7 +34,7 @@ notify.status().then(console.log)
 
 ### notify.send()
 
-Send message.  
+Send message.
 Returns a **Promise object**.
 
 ```js
@@ -46,7 +48,7 @@ notify.send({
 // { status: 200, message: 'ok' }
 ```
 
-For sticker parameter, you can use one of these shorthands below.  
+For sticker parameter, you can use one of these shorthands below.
 
 - sleep
 - smile
@@ -73,7 +75,7 @@ If it's a remote url, the format must be a **JPEG** and these parameter _fullsiz
 
 ### notify.revoke()
 
-Revoke given token.  
+Revoke given token.
 Returns a **Promise object**.
 
 ```js
