@@ -1,9 +1,9 @@
-import fs from 'fs'
 import qs from 'querystring'
 import fetch from 'isomorphic-unfetch'
-import FormData from 'form-data'
+import { FormData } from 'formdata-node'
+import { fileFromPath } from 'formdata-node/file-from-path'
 
-import {ENDPOINT, STICKER} from './consts'
+import { ENDPOINT, STICKER } from './consts'
 
 export type NotifyOption = {
   token: string
@@ -43,9 +43,9 @@ export type TokenResponse = {
 }
 
 export type SendOption = {
-  message: string,
-  image?: string | {fullsize: string, thumbnail: string},
-  sticker?: keyof typeof STICKER | {packageId: number, id: number}
+  message: string
+  image?: string | { fullsize: string; thumbnail: string }
+  sticker?: keyof typeof STICKER | { packageId: number; id: number }
   notificationDisabled?: boolean
 }
 
@@ -67,31 +67,28 @@ export type TokenOption = {
 }
 
 export class NotifyError extends Error {
-
   public status: number
 
-  constructor(param: {status: number, message?: string}) {
+  constructor(param: { status: number; message?: string }) {
     super(param.message)
     this.name = 'NotifyError'
     this.status = param.status
   }
-
 }
 
 export class Notify {
-
   public accessToken: string
   public ratelimit?: RateLimit
 
-  constructor({token}: NotifyOption) {
+  constructor({ token }: NotifyOption) {
     this.accessToken = token
   }
 
   private async req(type: 'api' | 'oauth', path: string, param?: RequestInit) {
     const url = ENDPOINT.notify[type] + path
-    const headers = {Authorization: `Bearer ${this.accessToken}`, ...param?.headers}
-    return fetch(url, {...param, headers})
-      .then(r => {
+    const headers = { Authorization: `Bearer ${this.accessToken}`, ...param?.headers }
+    return fetch(url, { ...param, headers })
+      .then((r) => {
         const limit = r.headers.get('x-ratelimit-limit')
         const remaining = r.headers.get('x-ratelimit-remaining')
         const imageLimit = r.headers.get('x-ratelimit-imagelimit')
@@ -101,18 +98,18 @@ export class Notify {
           this.ratelimit = {
             request: {
               limit: parseInt(limit),
-              remaining: parseInt(remaining)
+              remaining: parseInt(remaining),
             },
             image: {
               limit: parseInt(imageLimit),
-              remaining: parseInt(imageRemaining)
+              remaining: parseInt(imageRemaining),
             },
-            reset: new Date(parseInt(reset) * 1000)
+            reset: new Date(parseInt(reset) * 1000),
           }
         }
         return r.json()
       })
-      .then(r => {
+      .then((r) => {
         if (r.status !== 200) {
           throw new NotifyError(r)
         }
@@ -122,12 +119,12 @@ export class Notify {
 
   private get(type: 'api' | 'oauth', path: string, query?: Record<string, any>) {
     const q = query ? '?' + qs.stringify(query) : ''
-    return this.req(type, path + q, {method: 'get'})
+    return this.req(type, path + q, { method: 'get' })
   }
 
   private post(type: 'api' | 'oauth', path: string, formData: FormData) {
     // @ts-ignore
-    return this.req(type, path, {method: 'post', headers: formData.getHeaders(), body: formData})
+    return this.req(type, path, { method: 'post', body: formData })
   }
 
   status(): Promise<StatusResponse> {
@@ -138,14 +135,13 @@ export class Notify {
     return this.get('api', '/revoke')
   }
 
-  send({message, image, sticker, notificationDisabled}: SendOption): Promise<SendResponse> {
-
+  async send({ message, image, sticker, notificationDisabled }: SendOption): Promise<SendResponse> {
     const formData = new FormData()
     formData.append('message', message)
 
     if (image) {
       if (typeof image === 'string') {
-        formData.append('imageFile', fs.createReadStream(image))
+        formData.append('imageFile', await fileFromPath(image))
       } else {
         formData.append('imageFullsize', image.fullsize)
         formData.append('imageThumbnail', image.thumbnail)
@@ -153,19 +149,18 @@ export class Notify {
     }
 
     if (sticker) {
-      const {packageId, id} = typeof sticker === 'string' ? (STICKER[sticker] || {}) : sticker
+      const { packageId, id } = typeof sticker === 'string' ? STICKER[sticker] || {} : sticker
       if (packageId && id) {
         formData.append('stickerPackageId', packageId)
         formData.append('stickerId', id)
       }
     }
 
-    if (notificationDisabled !== void (0)) {
+    if (notificationDisabled !== void 0) {
       formData.append('notificationDisabled', notificationDisabled)
     }
 
     return this.post('api', '/notify', formData)
-
   }
 
   authorize(opt: AuthorizeOption): Promise<void> {
@@ -181,5 +176,4 @@ export class Notify {
     formData.append('client_secret', opt.client_secret)
     return this.post('oauth', '/token', formData)
   }
-
 }
