@@ -1,7 +1,9 @@
 import qs from 'querystring'
-import fetch from 'isomorphic-unfetch'
+import fetch, { Headers, RequestInit } from 'node-fetch'
+import { Readable } from 'stream'
 import { FormData } from 'formdata-node'
 import { fileFromPath } from 'formdata-node/file-from-path'
+import { FormDataEncoder } from 'form-data-encoder'
 
 import { ENDPOINT, STICKER } from './consts'
 
@@ -86,7 +88,10 @@ export class Notify {
 
   private async req(type: 'api' | 'oauth', path: string, param?: RequestInit) {
     const url = ENDPOINT.notify[type] + path
-    const headers = { Authorization: `Bearer ${this.accessToken}`, ...param?.headers }
+
+    const headers = new Headers(param?.headers)
+    headers.set('Authorization', `Bearer ${this.accessToken}`)
+
     return fetch(url, { ...param, headers })
       .then((r) => {
         const limit = r.headers.get('x-ratelimit-limit')
@@ -123,8 +128,8 @@ export class Notify {
   }
 
   private post(type: 'api' | 'oauth', path: string, formData: FormData) {
-    // @ts-ignore
-    return this.req(type, path, { method: 'post', body: formData })
+    const encoder = new FormDataEncoder(formData)
+    return this.req(type, path, { method: 'post', headers: encoder.headers, body: Readable.from(encoder) })
   }
 
   status(): Promise<StatusResponse> {
